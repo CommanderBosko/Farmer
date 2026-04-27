@@ -25,3 +25,7 @@ Customize bot behavior by editing the `config.py` file. Adjust settings like `FO
 # Development Conventions
 
 The script is developed in a procedural style, necessitated by the constraints of the execution environment, which does not support Python classes or advanced syntax features. Global variables are used for managing state. The code aims for clarity and maintainability while adhering to these strict compatibility requirements. Data-driven approaches have been used where possible (e.g., for `auto_unlocks` and `PREREQUISITES`) to keep the logic modular.
+
+# Agent
+
+All work in this project is done by the `farmer-replaced-expert` agent.

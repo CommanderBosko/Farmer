@@ -2,6 +2,9 @@
 
 # Set a focus crop, or set to None for default behavior.
 # Possible values: "Hay", "Wood", "Carrot", "Pumpkin", None
+# WARNING: FOCUS_CROP bypasses prerequisite stock checks entirely.
+# If planting a crop that requires prerequisites (e.g. Pumpkin requires Carrot),
+# you must pre-stock those prerequisites manually before enabling this mode.
 FOCUS_CROP = None
 
 # How often to print the current goal (every N loops). Set to 1 to print every loop.
