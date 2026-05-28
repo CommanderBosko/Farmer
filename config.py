@@ -20,3 +20,9 @@ MIN_PREREQ_STOCK = 100000
 # speed (1 power consumed per 30 actions), so keeping it stocked is worth
 # the brief detour. Requires Unlocks.Sunflowers to be purchased first.
 MIN_POWER_STOCK = 500
+
+# Weird_Substance threshold for triggering maze farming. The bot will run a
+# maze (clearing the current farm) only when this much WS is stockpiled.
+# Maze cost = world_size * 2^(maze_level-1), so 500 comfortably covers any
+# level. Lower this for more frequent maze runs; raise it to prioritize crops.
+MIN_WEIRD_SUBSTANCE_STOCK = 500

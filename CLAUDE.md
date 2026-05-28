@@ -45,6 +45,7 @@ This is a farming automation bot for a game. The game injects its own API at run
 | `PRINT_GOAL_INTERVAL` | Print status every N outer loops; `0`/`None` disables |
 | `MIN_PREREQ_STOCK` | Minimum prerequisite resource to hold before advancing to a higher-tier crop (default 100 000) |
 | `MIN_POWER_STOCK` | Replenish sunflowers when power drops below this; power doubles drone speed (default 500) |
+| `MIN_WEIRD_SUBSTANCE_STOCK` | Run a maze when `Items.Weird_Substance` reaches this level; lower = more frequent runs (default 500) |
 
 ### Crop farming strategies (inside `farm()`)
 
@@ -53,7 +54,7 @@ This is a farming automation bot for a game. The game injects its own API at run
 - **Carrot** — harvest and replant on soil
 - **Pumpkin** — water → plant → fertilize (or `do_a_flip()` if no fertilizer) → wait → harvest
 - **Cactus** — phase state machine in `farm_cactus()`; see Scripting gotchas below
-- **Maze** — `farm_maze()` spends `Items.Weird_Substance` to grow a maze from a bush, wall-follows to `Entities.Treasure`, then `harvest()` yields `Items.Gold` equal to maze area
+- **Maze** — triggered when `weird_substance >= MIN_WEIRD_SUBSTANCE_STOCK` (not by lowest-stock logic); `farm_maze()` calls `clear()`, grows a maze from a bush, left-hand wall-follows to `Entities.Treasure` (step-counter safety valve: `world_size² × 4` max steps), harvests if treasure was reached, then calls `clear()` again to reset the farm; single-use only (no reuse stacking)
 - **Sunflower** — `farm_sunflower()` fills the entire grid with sunflowers; Pass 1 scans for the max-petal cell, then harvests it first for the 8× power bonus (requires ≥10 sunflowers on the farm, i.e. world_size ≥ 4); Pass 2 harvests all remaining ready cells and replants
 
 ### Items reference

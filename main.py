@@ -174,27 +174,28 @@ def plant_decision():
 	if goal_item:
 		return check_stock(goal_item) # Check stock for the goal item
 
+	# Run a maze when we've stockpiled enough weird substance
+	if num_unlocked(Unlocks.Mazes) > 0 and weird_substance >= config.MIN_WEIRD_SUBSTANCE_STOCK:
+		return Items.Weird_Substance
+
 	# Fallback logic: plant what you have the least of, but check prerequisites.
-	# Branches are ordered by ascending priority (Hay lowest, Weird_Substance highest).
+	# Branches are ordered by ascending priority (Hay lowest, Cactus highest).
 	# Each branch uses <= so tied crops fall through to the higher-priority branch,
-	# meaning the last matching branch wins: Weird_Substance > Cactus > Pumpkin > Carrot > Wood > Hay.
+	# meaning the last matching branch wins: Cactus > Pumpkin > Carrot > Wood > Hay.
 	_hay = get_amount(Items.Hay)
 	_wood = get_amount(Items.Wood)
 	_carrot = get_amount(Items.Carrot)
 	_pumpkin = get_amount(Items.Pumpkin)
 	_cactus = get_amount(Items.Cactus)
-	_weird_substance = get_amount(Items.Weird_Substance)
 	result = Items.Hay
-	if _wood <= _hay and _wood <= _carrot and _wood <= _pumpkin and _wood <= _cactus and _wood <= _weird_substance:
+	if _wood <= _hay and _wood <= _carrot and _wood <= _pumpkin and _wood <= _cactus:
 		result = check_stock(Items.Wood)
-	if _carrot <= _hay and _carrot <= _wood and _carrot <= _pumpkin and _carrot <= _cactus and _carrot <= _weird_substance:
+	if _carrot <= _hay and _carrot <= _wood and _carrot <= _pumpkin and _carrot <= _cactus:
 		result = check_stock(Items.Carrot)
-	if _pumpkin <= _hay and _pumpkin <= _wood and _pumpkin <= _carrot and _pumpkin <= _cactus and _pumpkin <= _weird_substance:
+	if _pumpkin <= _hay and _pumpkin <= _wood and _pumpkin <= _carrot and _pumpkin <= _cactus:
 		result = check_stock(Items.Pumpkin)
-	if _cactus <= _hay and _cactus <= _wood and _cactus <= _carrot and _cactus <= _pumpkin and _cactus <= _weird_substance:
+	if _cactus <= _hay and _cactus <= _wood and _cactus <= _carrot and _cactus <= _pumpkin:
 		result = Items.Cactus
-	if _weird_substance <= _hay and _weird_substance <= _wood and _weird_substance <= _carrot and _weird_substance <= _pumpkin and _weird_substance <= _cactus:
-		result = Items.Weird_Substance
 	return result
 
 def auto_unlocks():
@@ -422,8 +423,13 @@ def farm_maze():
 	# Directions cycle: North=0, East=1, South=2, West=3
 	DIRS = [North, East, South, West]
 	facing = 0  # start facing North
+	max_steps = get_world_size() * get_world_size() * 4
+	steps = 0
 
 	while get_entity_type() != Entities.Treasure:
+		if steps >= max_steps:
+			break  # safety valve — bail out if maze takes too long
+		steps += 1
 		# Try to turn left and move (left-hand wall following)
 		left = (facing - 1) % 4
 		if move(DIRS[left]):
@@ -434,8 +440,12 @@ def farm_maze():
 			# Turn right
 			facing = (facing + 1) % 4
 
-	# On the treasure — harvest for gold equal to maze area
-	harvest()
+	# Harvest only if we actually reached the treasure
+	if get_entity_type() == Entities.Treasure:
+		harvest()
+
+	# Reset farm to a clean farmable state regardless of outcome
+	clear()
 
 def farm_sunflower():
 	world_size = get_world_size()
