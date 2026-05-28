@@ -51,3 +51,27 @@ This is a farming automation bot for a game. The game injects its own API at run
 - **Wood** — plant trees on a diagonal checkerboard; fill other cells with carrots
 - **Carrot** — harvest and replant on soil
 - **Pumpkin** — water → plant → fertilize (or `do_a_flip()` if no fertilizer) → wait → harvest
+
+### Scripting gotchas
+
+**Grid traversal off-by-one** — `move()` does NOT wrap. Always guard the final step:
+```python
+for y in range(world_size):
+    # ... work ...
+    if y < world_size - 1:
+        move(North)
+```
+Same applies to `move(East)` at the end of column loops. This mistake exists in both the main loop and inside `farm_cactus()`.
+
+**Cactus — phase state machine** — `farm_cactus()` advances a global `cactus_phase` (0–4):
+- 0: Plant (harvest old → till → `plant(Entities.Cactus)`)
+- 1: Wait (scan all cells; advance only when all `can_harvest()`)
+- 2: Sort rows descending by `measure()` so largest is at x=0 per row
+- 3: Sort columns descending by `measure()` so largest is at y=0 per column
+- 4: Harvest SW corner (x=0, y=0)
+
+Sort swap condition for descending (largest toward origin): swap when `measure() < measure(East)` (phase 2) or `measure() < measure(North)` (phase 3).
+
+**Wood — trees require Soil** — before `plant(Entities.Tree)` always check `if get_ground_type() != Grounds.Soil: till()`. Planting on Grassland fails silently.
+
+**Pumpkin — second harvest sweep** — after the main grid traversal a second full sweep is needed to catch tiles that ripened while the drone worked other cells.
