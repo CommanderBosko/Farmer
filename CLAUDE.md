@@ -64,13 +64,15 @@ for y in range(world_size):
 Same applies to `move(East)` at the end of column loops. This mistake exists in both the main loop and inside `farm_cactus()`.
 
 **Cactus — phase state machine** — `farm_cactus()` advances a global `cactus_phase` (0–4):
-- 0: Plant (harvest old → till → `plant(Entities.Cactus)`)
-- 1: Wait (scan all cells; advance only when all `can_harvest()`)
-- 2: Sort rows descending by `measure()` so largest is at x=0 per row
-- 3: Sort columns descending by `measure()` so largest is at y=0 per column
-- 4: Harvest SW corner (x=0, y=0)
+- 0: Plant — column-by-column traversal, till to Soil, `plant(Entities.Cactus)`
+- 1: Wait — advance only when all `can_harvest()`
+- 2: Sort rows ascending — bubble sort each row West→East; smaller values bubble West; smallest ends at x=0
+- 3: Sort columns ascending — bubble sort each column South→North; smallest ends at y=0
+- 4: Harvest — `goto_sw()` to origin, single `harvest()` cascades through sorted field
 
-Sort swap condition for descending (largest toward origin): swap when `measure() < measure(East)` (phase 2) or `measure() < measure(North)` (phase 3).
+Sort swap condition (ascending, smallest at SW origin): `if measure() > measure(East/North): swap(East/North)`.
+
+`goto_sw()` navigates to origin (x=0, y=0) by moving South then West. Avoid nested `while` loops inside `farm_cactus()` — the game environment does not handle them reliably.
 
 **Wood — trees require Soil** — before `plant(Entities.Tree)` always check `if get_ground_type() != Grounds.Soil: till()`. Planting on Grassland fails silently.
 

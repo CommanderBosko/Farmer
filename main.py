@@ -248,29 +248,19 @@ def update_amounts():
 
 def farm(crop_choice, x, y):
 	if crop_choice == Items.Hay:
-		# Harvest whatever is here, then ensure the ground is Grassland so
-		# wild hay can regrow automatically next pass.
 		harvest()
 		if get_ground_type() != Grounds.Grassland:
 			till()
 
 	elif crop_choice == Items.Wood:
-		# Always harvest first to clear any prior crop.
 		harvest()
 		if (x % 2 == 0 and y % 2 == 0) or (x % 2 == 1 and y % 2 == 1):
-			# Diagonal cells: plant trees.  Trees need Soil.
-			if get_ground_type() != Grounds.Soil:
-				till()
 			plant(Entities.Tree)
 		else:
-			# Off-diagonal cells: interplant hay (Grassland) when hay is low,
-			# otherwise grow carrots for extra income.
 			if get_amount(Items.Hay) <= get_amount(Items.Carrot):
-				# Hay mode — just need Grassland; wild hay regrows on its own.
 				if get_ground_type() != Grounds.Grassland:
 					till()
 			else:
-				# Carrot mode
 				if get_ground_type() != Grounds.Soil:
 					till()
 				plant(Entities.Carrot)
@@ -282,29 +272,28 @@ def farm(crop_choice, x, y):
 		plant(Entities.Carrot)
 
 	elif crop_choice == Items.Pumpkin:
-		# Harvest only when ready; tilling/watering/planting happen every visit.
 		if can_harvest():
 			harvest()
 		if get_ground_type() != Grounds.Soil:
 			till()
-		# Ensure the tile has water before planting.
 		while get_water() < 1:
 			use_item(Items.Water)
 		plant(Entities.Pumpkin)
-		# Boost growth with fertilizer if available, otherwise do a flip.
+		
+		# Use fertilizer if available, otherwise flip
 		if get_amount(Items.Fertilizer) > 0:
 			use_item(Items.Fertilizer)
 		else:
 			do_a_flip()
-		# Spin-wait for this tile to be harvestable (bounded to avoid infinite hang).
+		
 		pumpkin_iter = 0
 		while not can_harvest():
 			if pumpkin_iter >= 100:
 				break
 			pumpkin_iter += 1
-			# Re-plant and re-boost each iteration in case the plant needs it.
 			harvest()
 			plant(Entities.Pumpkin)
+			# Use fertilizer if available, otherwise flip
 			if get_amount(Items.Fertilizer) > 0:
 				use_item(Items.Fertilizer)
 			else:
@@ -321,10 +310,7 @@ def farm_cactus():
 	world_size = get_world_size()
 
 	if cactus_phase == 0:
-		# Phase 0 — Plant: ensure every cell has a cactus on Soil.
-		# Traversal: South-West corner is (x=0, y=0). We walk North through each
-		# column, then step East to the next column.  The move(North) is guarded
-		# so we never step off the top edge of the grid.
+		# Plant: ensure every cell has a cactus on soil
 		goto_sw()
 		for x in range(world_size):
 			for y in range(world_size):
@@ -342,7 +328,7 @@ def farm_cactus():
 		cactus_phase = 1
 
 	elif cactus_phase == 1:
-		# Phase 1 — Wait: scan every cell; only advance when ALL are harvestable.
+		# Wait: check every cell — only advance when ALL are harvestable
 		goto_sw()
 		all_ready = True
 		for x in range(world_size):
@@ -356,24 +342,18 @@ def farm_cactus():
 		goto_sw()
 		if all_ready:
 			cactus_phase = 2
-		# If not all ready, stay in phase 1 and re-check next outer loop iteration.
 
 	elif cactus_phase == 2:
-		# Phase 2 — Sort rows (X axis): descending bubble sort so the largest cactus
-		# ends up at the West end (x=0) of every row.  We want descending order
-		# left→right.  Swap condition: swap when the current cell is LESS than its
-		# East neighbor — this bubbles larger values toward x=0 (West).
+		# Sort rows: bubble sort each row West→East
 		goto_sw()
 		for row in range(world_size):
 			for _ in range(world_size - 1):
 				swapped = False
 				for col in range(world_size - 1):
-					# Swap so that the larger cactus ends up on the West (left) side.
-					if measure() < measure(East):
+					if measure() > measure(East):
 						swap(East)
 						swapped = True
 					move(East)
-				# Return to the West end of this row.
 				for col in range(world_size - 1):
 					move(West)
 				if not swapped:
@@ -384,20 +364,16 @@ def farm_cactus():
 		cactus_phase = 3
 
 	elif cactus_phase == 3:
-		# Phase 3 — Sort columns: descending bubble sort each column along the Y axis
-		# so the largest cactus ends up at the South end (y=0) of every column.
-		# Swap condition: swap when current < North neighbor (push larger values South).
+		# Sort columns: bubble sort each column South→North
 		goto_sw()
 		for col in range(world_size):
 			for _ in range(world_size - 1):
 				swapped = False
 				for row in range(world_size - 1):
-					# Swap so that the larger cactus ends up on the South (bottom) side.
-					if measure() < measure(North):
+					if measure() > measure(North):
 						swap(North)
 						swapped = True
 					move(North)
-				# Return to the South end of this column.
 				for row in range(world_size - 1):
 					move(South)
 				if not swapped:
@@ -408,11 +384,10 @@ def farm_cactus():
 		cactus_phase = 4
 
 	elif cactus_phase == 4:
-		# Phase 4 — Harvest: the SW corner (x=0, y=0) now holds the largest cactus.
-		# Harvesting it cascades through the sorted field.
+		# Harvest from SW corner — cascades to full grid if all grown and sorted
 		goto_sw()
 		harvest()
-		cactus_phase = 0  # Field is now empty; replant on the next call.
+		cactus_phase = 0  # reset: field is now empty, replant next iteration
 
 def farm_maze():
 	# Determine how much Weird_Substance to use for this maze
@@ -492,27 +467,11 @@ while True:
 		for x in range(world_size):
 			for y in range(world_size):
 				farm(crop_choice, x, y)
-				# Move North after each cell except the last in the column,
-				# to avoid stepping off the top edge of the grid.
-				if y < world_size - 1:
-					move(North)
-			# Move East after each column except the last,
-			# to avoid stepping off the right edge of the grid.
-			if x < world_size - 1:
-				move(East)
+				move(North)
+			move(East)
 
-		# After traversing the whole field for pumpkins, do a final harvest pass
-		# to catch any tiles that became ready during traversal of later cells.
 		if crop_choice == Items.Pumpkin:
-			for x in range(world_size):
-				for y in range(world_size):
-					if can_harvest():
-						harvest()
-					if y < world_size - 1:
-						move(North)
-				if x < world_size - 1:
-					move(East)
+			harvest()
 
-		# Return to SW corner (0, 0) after every non-cactus/maze pass.
 		if get_pos_x() != 0 or get_pos_y() != 0:
 			clear()
