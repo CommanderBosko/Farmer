@@ -19,10 +19,16 @@ MIN_PREREQ_STOCK = 100000
 # switch to sunflower farming until it's replenished. Power doubles drone
 # speed (1 power consumed per 30 actions), so keeping it stocked is worth
 # the brief detour. Requires Unlocks.Sunflowers to be purchased first.
-MIN_POWER_STOCK = 500
+MIN_POWER_STOCK = 50000
 
 # Weird_Substance threshold for triggering maze farming. The bot will run a
 # maze (clearing the current farm) only when this much WS is stockpiled.
 # Maze cost = world_size * 2^(maze_level-1), so 500 comfortably covers any
 # level. Lower this for more frequent maze runs; raise it to prioritize crops.
 MIN_WEIRD_SUBSTANCE_STOCK = 500
+
+# Gold target. When > 0, the bot will prioritize maze runs (as soon as one
+# maze worth of WS is available) until gold reaches this amount. Set this
+# before manually purchasing gold-cost upgrades (Top Hat, Megafarm, Debug_2,
+# Simulation, Leaderboard), then reset to 0 when done.
+MIN_GOLD_STOCK = 0

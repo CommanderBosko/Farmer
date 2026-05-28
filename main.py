@@ -21,6 +21,7 @@ weird_substance = 0
 fertilizer = 0
 water = 0
 power = 0
+gold = 0
 loop_counter = 0 # New: Global counter for loop iterations
 cactus_phase = 0
 
@@ -33,6 +34,7 @@ ITEM_NAMES = {
 	Items.Cactus: "Cactus",
 	Items.Weird_Substance: "Weird_Substance",
 	Items.Power: "Power",
+	Items.Gold: "Gold",
 }
 # New: Map Unlocks enum to readable names
 UNLOCK_NAMES = {
@@ -99,6 +101,8 @@ def get_amount(item):
 		return water
 	if item == Items.Power:
 		return power
+	if item == Items.Gold:
+		return gold
 	return 0
 
 def get_next_unlock_goal():
@@ -173,6 +177,12 @@ def plant_decision():
 	goal_item, unlock_name = get_next_unlock_goal()
 	if goal_item:
 		return check_stock(goal_item) # Check stock for the goal item
+
+	# Prioritize maze runs when gold is below the manual-upgrade target
+	if config.MIN_GOLD_STOCK > 0 and gold < config.MIN_GOLD_STOCK and num_unlocked(Unlocks.Mazes) > 0:
+		n_substance = get_world_size() * 2 ** (num_unlocked(Unlocks.Mazes) - 1)
+		if weird_substance >= n_substance:
+			return Items.Weird_Substance
 
 	# Run a maze when we've stockpiled enough weird substance
 	if num_unlocked(Unlocks.Mazes) > 0 and weird_substance >= config.MIN_WEIRD_SUBSTANCE_STOCK:
@@ -250,6 +260,7 @@ def update_amounts():
 	global fertilizer
 	global water
 	global power
+	global gold
 	hay = num_items(Items.Hay)
 	wood = num_items(Items.Wood)
 	carrot = num_items(Items.Carrot)
@@ -259,6 +270,7 @@ def update_amounts():
 	fertilizer = num_items(Items.Fertilizer)
 	water = num_items(Items.Water)
 	power = num_items(Items.Power)
+	gold = num_items(Items.Gold)
 
 def farm(crop_choice, x, y):
 	if crop_choice == Items.Hay:

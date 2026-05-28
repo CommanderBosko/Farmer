@@ -34,7 +34,7 @@ This is a farming automation bot for a game. The game injects its own API at run
 ### Key design constraints
 
 - **Procedural only** — the game environment does not support Python classes or advanced syntax. No OOP, no dataclasses, no comprehensions that rely on class scope.
-- **Global state** — resource counts (`hay`, `wood`, `carrot`, `pumpkin`, `cactus`, `weird_substance`, `fertilizer`, `water`, `power`, `loop_counter`) are module-level globals mutated by `update_amounts()`.
+- **Global state** — resource counts (`hay`, `wood`, `carrot`, `pumpkin`, `cactus`, `weird_substance`, `fertilizer`, `water`, `power`, `gold`, `loop_counter`) are module-level globals mutated by `update_amounts()`.
 - **Data-driven unlock logic** — unlock ordering and prerequisite checks use tuple/dict tables (`UNLOCK_NAMES`, `PREREQUISITES`, `FOCUS_CROP_MAP`) so new tiers can be added without touching control flow.
 
 ### config.py knobs
@@ -46,6 +46,7 @@ This is a farming automation bot for a game. The game injects its own API at run
 | `MIN_PREREQ_STOCK` | Minimum prerequisite resource to hold before advancing to a higher-tier crop (default 100 000) |
 | `MIN_POWER_STOCK` | Replenish sunflowers when power drops below this; power doubles drone speed (default 500) |
 | `MIN_WEIRD_SUBSTANCE_STOCK` | Run a maze when `Items.Weird_Substance` reaches this level; lower = more frequent runs (default 500) |
+| `MIN_GOLD_STOCK` | When `> 0`, prioritize maze runs until this gold target is reached; set before manually buying gold-cost upgrades, reset to `0` when done (default 0) |
 
 ### Crop farming strategies (inside `farm()`)
 
@@ -67,7 +68,7 @@ This is a farming automation bot for a game. The game injects its own API at run
 | `Items.Pumpkin` | Harvesting pumpkins | Prerequisite for Cactus/Dinosaur unlocks |
 | `Items.Cactus` | Harvesting sorted cacti | Phase state machine; prerequisite for Dinosaur unlock |
 | `Items.Weird_Substance` | **Side-effect of `use_item(Items.Fertilizer)`** on any plant | Spent (not grown) — consumed by `farm_maze()` to enter a maze |
-| `Items.Gold` | Maze treasure chest | `harvest()` at `Entities.Treasure`; gold = maze area; `Items.Gold` never referenced directly in code |
+| `Items.Gold` | Maze treasure chest | `harvest()` at `Entities.Treasure`; gold = maze area; tracked in global `gold` and `get_amount()`; used by `MIN_GOLD_STOCK` logic |
 | `Items.Fertilizer` | Trade (10 pumpkins each) | `use_item(Items.Fertilizer)` grows plant by 2s; each use also generates `Items.Weird_Substance` |
 | `Items.Water` | — | `use_item(Items.Water)` waters soil before planting pumpkins |
 | `Items.Power` | Harvesting sunflowers | Passive — doubles drone movement speed automatically; no `use_item()` call needed |
