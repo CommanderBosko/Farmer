@@ -338,10 +338,16 @@ def farm_grid(crop_choice, start_x, end_x):
 	for i in range(start_x):
 		move(East)
 	for x in range(start_x, end_x):
-		for y in range(world_size):
-			farm(crop_choice, x, y)
-			if y < world_size - 1:
-				move(North)
+		if (x - start_x) % 2 == 0:
+			for y in range(world_size):
+				farm(crop_choice, x, y)
+				if y < world_size - 1:
+					move(North)
+		else:
+			for y in range(world_size - 1, -1, -1):
+				farm(crop_choice, x, y)
+				if y > 0:
+					move(South)
 		if x < end_x - 1:
 			move(East)
 
@@ -576,6 +582,3 @@ while True:
 
 		if crop_choice == Items.Pumpkin:
 			harvest()
-
-		if get_pos_x() != 0 or get_pos_y() != 0:
-			clear()
