@@ -8,6 +8,7 @@ FOCUS_CROP_MAP = {
 	"Pumpkin": Items.Pumpkin,
 	"Cactus": Items.Cactus,
 	"Maze": Items.Weird_Substance,
+	"Sunflower": Items.Power,
 }
 
 # --- Global State ---
@@ -19,6 +20,7 @@ cactus = 0
 weird_substance = 0
 fertilizer = 0
 water = 0
+power = 0
 loop_counter = 0 # New: Global counter for loop iterations
 cactus_phase = 0
 
@@ -30,6 +32,7 @@ ITEM_NAMES = {
 	Items.Pumpkin: "Pumpkin",
 	Items.Cactus: "Cactus",
 	Items.Weird_Substance: "Weird_Substance",
+	Items.Power: "Power",
 }
 # New: Map Unlocks enum to readable names
 UNLOCK_NAMES = {
@@ -94,6 +97,8 @@ def get_amount(item):
 		return fertilizer
 	if item == Items.Water:
 		return water
+	if item == Items.Power:
+		return power
 	return 0
 
 def get_next_unlock_goal():
@@ -160,6 +165,10 @@ def plant_decision():
 
 	if config.FOCUS_CROP and config.FOCUS_CROP in FOCUS_CROP_MAP:
 		return FOCUS_CROP_MAP[config.FOCUS_CROP] # Focus mode bypasses stock checks
+
+	# Power doubles drone speed — replenish before pursuing other goals
+	if num_unlocked(Unlocks.Sunflowers) > 0 and power < config.MIN_POWER_STOCK:
+		return Items.Power
 
 	goal_item, unlock_name = get_next_unlock_goal()
 	if goal_item:
@@ -239,6 +248,7 @@ def update_amounts():
 	global weird_substance
 	global fertilizer
 	global water
+	global power
 	hay = num_items(Items.Hay)
 	wood = num_items(Items.Wood)
 	carrot = num_items(Items.Carrot)
@@ -247,6 +257,7 @@ def update_amounts():
 	weird_substance = num_items(Items.Weird_Substance)
 	fertilizer = num_items(Items.Fertilizer)
 	water = num_items(Items.Water)
+	power = num_items(Items.Power)
 
 def farm(crop_choice, x, y):
 	if crop_choice == Items.Hay:
@@ -426,6 +437,57 @@ def farm_maze():
 	# On the treasure — harvest for gold equal to maze area
 	harvest()
 
+def farm_sunflower():
+	world_size = get_world_size()
+
+	# Pass 1: plant any missing sunflowers; find the max-petal position
+	goto_sw()
+	max_petals = 0
+	max_x = 0
+	max_y = 0
+	for x in range(world_size):
+		for y in range(world_size):
+			if get_ground_type() != Grounds.Soil:
+				till()
+			if get_entity_type() != Entities.Sunflower:
+				plant(Entities.Sunflower)
+			petals = measure()
+			if petals > max_petals:
+				max_petals = petals
+				max_x = x
+				max_y = y
+			if y < world_size - 1:
+				move(North)
+		if x < world_size - 1:
+			move(East)
+
+	# Harvest the max-petal sunflower first — triggers 8x power bonus when
+	# at least 10 sunflowers are on the farm (world_size >= 4 gives 16 cells)
+	goto_sw()
+	for i in range(max_x):
+		move(East)
+	for i in range(max_y):
+		move(North)
+	if can_harvest():
+		harvest()
+		if get_ground_type() != Grounds.Soil:
+			till()
+		plant(Entities.Sunflower)
+
+	# Pass 2: harvest all remaining ready sunflowers and replant
+	goto_sw()
+	for x in range(world_size):
+		for y in range(world_size):
+			if can_harvest():
+				harvest()
+				if get_ground_type() != Grounds.Soil:
+					till()
+				plant(Entities.Sunflower)
+			if y < world_size - 1:
+				move(North)
+		if x < world_size - 1:
+			move(East)
+
 # --- Main Execution ---
 
 clear()
@@ -464,6 +526,8 @@ while True:
 		farm_cactus()
 	elif crop_choice == Items.Weird_Substance:
 		farm_maze()
+	elif crop_choice == Items.Power:
+		farm_sunflower()
 	else:
 		world_size = get_world_size()
 		for x in range(world_size):

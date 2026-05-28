@@ -34,16 +34,17 @@ This is a farming automation bot for a game. The game injects its own API at run
 ### Key design constraints
 
 - **Procedural only** — the game environment does not support Python classes or advanced syntax. No OOP, no dataclasses, no comprehensions that rely on class scope.
-- **Global state** — resource counts (`hay`, `wood`, `carrot`, `pumpkin`, `cactus`, `weird_substance`, `fertilizer`, `water`, `loop_counter`) are module-level globals mutated by `update_amounts()`.
+- **Global state** — resource counts (`hay`, `wood`, `carrot`, `pumpkin`, `cactus`, `weird_substance`, `fertilizer`, `water`, `power`, `loop_counter`) are module-level globals mutated by `update_amounts()`.
 - **Data-driven unlock logic** — unlock ordering and prerequisite checks use tuple/dict tables (`UNLOCK_NAMES`, `PREREQUISITES`, `FOCUS_CROP_MAP`) so new tiers can be added without touching control flow.
 
 ### config.py knobs
 
 | Variable | Effect |
 |---|---|
-| `FOCUS_CROP` | Force-plant one crop type (`"Hay"`, `"Wood"`, `"Carrot"`, `"Pumpkin"`, `"Cactus"`, `"Maze"`, or `None` for dynamic) |
+| `FOCUS_CROP` | Force-plant one crop type (`"Hay"`, `"Wood"`, `"Carrot"`, `"Pumpkin"`, `"Cactus"`, `"Maze"`, `"Sunflower"`, or `None` for dynamic) |
 | `PRINT_GOAL_INTERVAL` | Print status every N outer loops; `0`/`None` disables |
 | `MIN_PREREQ_STOCK` | Minimum prerequisite resource to hold before advancing to a higher-tier crop (default 100 000) |
+| `MIN_POWER_STOCK` | Replenish sunflowers when power drops below this; power doubles drone speed (default 500) |
 
 ### Crop farming strategies (inside `farm()`)
 
@@ -53,6 +54,7 @@ This is a farming automation bot for a game. The game injects its own API at run
 - **Pumpkin** — water → plant → fertilize (or `do_a_flip()` if no fertilizer) → wait → harvest
 - **Cactus** — phase state machine in `farm_cactus()`; see Scripting gotchas below
 - **Maze** — `farm_maze()` spends `Items.Weird_Substance` to grow a maze from a bush, wall-follows to `Entities.Treasure`, then `harvest()` yields `Items.Gold` equal to maze area
+- **Sunflower** — `farm_sunflower()` fills the entire grid with sunflowers; Pass 1 scans for the max-petal cell, then harvests it first for the 8× power bonus (requires ≥10 sunflowers on the farm, i.e. world_size ≥ 4); Pass 2 harvests all remaining ready cells and replants
 
 ### Items reference
 

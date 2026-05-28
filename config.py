@@ -1,7 +1,7 @@
 # Configuration for the Farmer bot
 
 # Set a focus crop, or set to None for default behavior.
-# Possible values: "Hay", "Wood", "Carrot", "Pumpkin", None
+# Possible values: "Hay", "Wood", "Carrot", "Pumpkin", "Cactus", "Maze", "Sunflower", None
 # WARNING: FOCUS_CROP bypasses prerequisite stock checks entirely.
 # If planting a crop that requires prerequisites (e.g. Pumpkin requires Carrot),
 # you must pre-stock those prerequisites manually before enabling this mode.
@@ -14,3 +14,9 @@ PRINT_GOAL_INTERVAL = 1
 # The minimum amount of a prerequisite resource to have in stock before
 # planting the next tier of crop.
 MIN_PREREQ_STOCK = 100000
+
+# Minimum power to keep on hand. When power drops below this the bot will
+# switch to sunflower farming until it's replenished. Power doubles drone
+# speed (1 power consumed per 30 actions), so keeping it stocked is worth
+# the brief detour. Requires Unlocks.Sunflowers to be purchased first.
+MIN_POWER_STOCK = 500
