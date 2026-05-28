@@ -17,7 +17,7 @@ This is a farming automation bot for a game. The game injects its own API at run
 ### Files
 
 - `main.py` — all logic; entry point is the bottom of the file
-- `config.py` — three user-tunable knobs (see below)
+- `config.py` — user-tunable knobs (see below)
 - `original-main.py` — backup of the pre-refactor version
 
 ### Control flow
@@ -27,7 +27,7 @@ This is a farming automation bot for a game. The game injects its own API at run
    - `update_amounts()` — sync global inventory vars from game
    - `plant_decision()` — pick crop based on config/unlock goals/lowest stock
    - `auto_unlocks()` — spend resources on unlocks if affordable
-   - Nested grid traversal calls `farm(crop_choice, x, y)` for every cell
+   - `farm_grid(crop_choice, start_x, end_x)` or two drones calling it on split columns
    - Periodic goal status print
    - Final harvest + position reset
 
@@ -47,6 +47,7 @@ This is a farming automation bot for a game. The game injects its own API at run
 | `MIN_POWER_STOCK` | Replenish sunflowers when power drops below this; power doubles drone speed (default 500) |
 | `MIN_WEIRD_SUBSTANCE_STOCK` | Run a maze when `Items.Weird_Substance` reaches this level; lower = more frequent runs (default 500) |
 | `MIN_GOLD_STOCK` | When `> 0`, prioritize maze runs until this gold target is reached; set before manually buying gold-cost upgrades, reset to `0` when done (default 0) |
+| `USE_MULTIPLE_DRONES` | When `True`, spawn a second drone to farm the right half of the grid in parallel (Hay/Wood/Carrot/Pumpkin only); set to `False` to revert to single-drone (default `True`) |
 
 ### Crop farming strategies (inside `farm()`)
 
@@ -123,7 +124,7 @@ for y in range(world_size):
     if y < world_size - 1:
         move(North)
 ```
-Same applies to `move(East)` at the end of column loops. This mistake exists in both the main loop and inside `farm_cactus()`.
+Same applies to `move(East)` at the end of column loops. `farm_grid()` and `farm_cactus()` both implement these guards correctly.
 
 **Cactus — phase state machine** — `farm_cactus()` advances a global `cactus_phase` (0–4):
 - 0: Plant — column-by-column traversal, till to Soil, `plant(Entities.Cactus)`
@@ -139,3 +140,9 @@ Sort swap condition (ascending, smallest at SW origin): `if measure() > measure(
 **Wood — trees require Soil** — before `plant(Entities.Tree)` always check `if get_ground_type() != Grounds.Soil: till()`. Planting on Grassland fails silently.
 
 **Pumpkin — second harvest sweep** — after the main grid traversal a second full sweep is needed to catch tiles that ripened while the drone worked other cells.
+
+**Mega Farm — multi-drone parallelism** — `farm_grid(crop_choice, start_x, end_x)` wraps the per-cell loop. When `config.USE_MULTIPLE_DRONES` is `True` and `world_size >= 2`, the main loop splits the grid at `mid = world_size // 2`: the spawned drone farms columns `[mid, world_size)` and the main drone farms `[0, mid)` concurrently. Key constraints:
+- Each drone owns exclusive columns — no shared tiles, no race conditions
+- `farm_grid()` calls `update_amounts()` at entry to sync the spawned drone's stale globals copy
+- Cactus, Maze, and Sunflower remain single-drone: cactus has cross-column sort phases, maze is sequential wall-following, sunflower needs a full-grid max-petal scan
+- `spawn_drone()`, `wait_for()`, `has_finished()` are game-injected APIs (not defined in repo)

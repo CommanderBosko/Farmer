@@ -32,3 +32,7 @@ MIN_WEIRD_SUBSTANCE_STOCK = 500
 # before manually purchasing gold-cost upgrades (Top Hat, Megafarm, Debug_2,
 # Simulation, Leaderboard), then reset to 0 when done.
 MIN_GOLD_STOCK = 0
+
+# Enable multi-drone farming (requires Mega Farm unlock purchased with Gold).
+# Set to False to fall back to single-drone if issues arise.
+USE_MULTIPLE_DRONES = True

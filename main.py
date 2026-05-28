@@ -141,7 +141,7 @@ def get_next_unlock_goal():
 	]
 
 	cheapest_goal = (None, None)
-	min_cost = 999999 # Using a large number as the initial minimum
+	min_cost = 10 ** 15
 
 	for unlock_item, required_item in unlocks_to_check:
 		cost = get_cost(unlock_item)
@@ -330,6 +330,20 @@ def goto_sw():
 		move(South)
 	while get_pos_x() > 0:
 		move(West)
+
+def farm_grid(crop_choice, start_x, end_x):
+	update_amounts()
+	world_size = get_world_size()
+	goto_sw()
+	for i in range(start_x):
+		move(East)
+	for x in range(start_x, end_x):
+		for y in range(world_size):
+			farm(crop_choice, x, y)
+			if y < world_size - 1:
+				move(North)
+		if x < end_x - 1:
+			move(East)
 
 def farm_cactus():
 	global cactus_phase
@@ -552,11 +566,13 @@ while True:
 		farm_sunflower()
 	else:
 		world_size = get_world_size()
-		for x in range(world_size):
-			for y in range(world_size):
-				farm(crop_choice, x, y)
-				move(North)
-			move(East)
+		if config.USE_MULTIPLE_DRONES and world_size >= 2:
+			mid = world_size // 2
+			drone = spawn_drone(farm_grid, crop_choice, mid, world_size)
+			farm_grid(crop_choice, 0, mid)
+			wait_for(drone)
+		else:
+			farm_grid(crop_choice, 0, world_size)
 
 		if crop_choice == Items.Pumpkin:
 			harvest()
