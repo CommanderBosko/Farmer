@@ -44,7 +44,6 @@ UNLOCK_NAMES = {
 	Unlocks.Carrots: "Carrots",
 	Unlocks.Fertilizer: "Fertilizer",
 	Unlocks.Watering: "Watering",
-	Unlocks.Expand: "Expand",
 	# Tier 3 – Carrot-cost unlocks
 	Unlocks.Variables: "Variables",
 	Unlocks.Functions: "Functions",
@@ -54,14 +53,15 @@ UNLOCK_NAMES = {
 	Unlocks.Trees: "Trees",
 	Unlocks.Pumpkins: "Pumpkins",
 	# Tier 4 – Pumpkin-cost unlocks
+	Unlocks.Expand: "Expand",
 	Unlocks.Utilities: "Utilities",
 	Unlocks.Timing: "Timing",
 	Unlocks.Costs: "Costs",
 	Unlocks.Dictionaries: "Dictionaries",
 	Unlocks.Polyculture: "Polyculture",
 	Unlocks.Auto_Unlock: "Auto_Unlock",
-	# Tier 5 – Cactus-cost unlocks
 	Unlocks.Cactus: "Cactus",
+	# Tier 5 – Cactus-cost unlocks
 	Unlocks.Dinosaurs: "Dinosaurs",
 	Unlocks.Mazes: "Mazes",
 }
@@ -128,6 +128,7 @@ def get_next_unlock_goal():
 		# Cactus-cost unlocks
 		(Unlocks.Cactus, Items.Pumpkin),
 		(Unlocks.Dinosaurs, Items.Cactus),
+		(Unlocks.Mazes, Items.Cactus),
 	]
 
 	cheapest_goal = (None, None)
@@ -219,6 +220,7 @@ def auto_unlocks():
 		# Cactus-cost unlocks
 		(Unlocks.Cactus, Items.Pumpkin, "Cactus"),
 		(Unlocks.Dinosaurs, Items.Cactus, "Dinosaurs"),
+		(Unlocks.Mazes, Items.Cactus, "Mazes"),
 	]
 
 	for unlock_item, required_item, name in unlocks:

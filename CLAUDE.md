@@ -70,6 +70,46 @@ This is a farming automation bot for a game. The game injects its own API at run
 | `Items.Power` | Harvesting sunflowers | Passive — doubles drone movement speed automatically; no `use_item()` call needed |
 | `Items.Bones` | Dinosaurs (not yet implemented) | "The bones of an ancient creature" |
 
+### Unlocks reference
+
+Payment resources match `auto_unlocks()` and `get_next_unlock_goal()`. Tier labels indicate gameplay tier, not necessarily the payment currency.
+
+| Unlock | Paid with | What it enables |
+|---|---|---|
+| `Unlocks.Loops` | Hay | `while` loops; `True`/`False` |
+| `Unlocks.Plant` | Hay | `plant()` function |
+| `Unlocks.Hats` | Hay | `change_hat()` and hat bonuses |
+| `Unlocks.Speed` | Hay | Drone speed upgrade (repeatable) |
+| `Unlocks.Senses` | Hay | `get_pos_x/y()`, `num_items()`, `get_entity_type()`, `get_ground_type()` |
+| `Unlocks.Grass` | Wood (Lvl 2+) | Hay yield multiplier: 100%→200%→400%+ |
+| `Unlocks.Carrots` | Wood | `till()` + `plant(Entities.Carrot)` |
+| `Unlocks.Fertilizer` | Wood | `trade(Items.Fertilizer)` + `use_item(Items.Fertilizer)` |
+| `Unlocks.Watering` | Wood | Doubles water regen rate |
+| `Unlocks.Variables` | Carrot | Variable assignment (`=`) |
+| `Unlocks.Functions` | Carrot | `def` function definitions |
+| `Unlocks.Import` | Carrot | `import` statement |
+| `Unlocks.Lists` | Carrot | Lists and sets |
+| `Unlocks.Sunflowers` | Carrot | `plant(Entities.Sunflower)` → passive `Items.Power` speed boost |
+| `Unlocks.Trees` | Hay | `plant(Entities.Tree)` — 5 wood each |
+| `Unlocks.Pumpkins` | Carrot | `plant(Entities.Pumpkin)` — initial cost 500 Wood + 200 Carrots |
+| `Unlocks.Expand` | Pumpkin | Expands farm grid size |
+| `Unlocks.Utilities` | Pumpkin | `min()`, `max()`, `abs()` |
+| `Unlocks.Timing` | Pumpkin | `get_time()`, `get_tick_count()` |
+| `Unlocks.Costs` | Pumpkin | `get_cost()` |
+| `Unlocks.Dictionaries` | Pumpkin | Dict and set data structures |
+| `Unlocks.Polyculture` | Pumpkin (Lvl 2: 10,000 Bones) | `get_companion()` — companion planting multiplier (base 5×, upgrades to 10×/20×/…) |
+| `Unlocks.Auto_Unlock` | Pumpkin | `unlock()`, `get_cost()`, `num_unlocked()` |
+| `Unlocks.Cactus` | Pumpkin | `plant(Entities.Cactus)`, `measure()`, `swap()` |
+| `Unlocks.Dinosaurs` | Cactus | `Hats.Dinosaur_Hat` → Bones harvesting |
+| `Unlocks.Mazes` | Cactus | Each level doubles maze treasure and `Items.Weird_Substance` cost |
+
+**Wiki pages that are NOT `Unlocks.*` enum values** (tutorial concepts or removed features):
+- Move, If, For, Operators — early built-in features, no corresponding enum
+- Debug, Debug_2 — `print()`, `quick_print()`, breakpoints, `set_execution_speed()`
+- Benchmark — redirects to Timing wiki page
+- Multi_Trade — **removed from game**
+- Leaderboard — competitive speed-run feature, not a purchasable unlock
+
 ### Scripting gotchas
 
 **Grid traversal off-by-one** — `move()` does NOT wrap. Always guard the final step:
