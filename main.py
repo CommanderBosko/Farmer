@@ -486,11 +486,7 @@ def farm_maze():
 
 def farm_sunflower():
 	world_size = get_world_size()
-
-	# Pass 1: plant missing sunflowers; collect harvestable cells with petal counts.
-	# Snake traversal ensures the drone is at the correct physical cell for each call.
 	goto_sw()
-	harvestable = []
 	for x in range(world_size):
 		if x % 2 == 0:
 			for y in range(world_size):
@@ -498,8 +494,11 @@ def farm_sunflower():
 					till()
 				if get_entity_type() != Entities.Sunflower:
 					plant(Entities.Sunflower)
-				if can_harvest():
-					harvestable.append((measure() or 0, x, y))
+				elif can_harvest():
+					harvest()
+					if get_ground_type() != Grounds.Soil:
+						till()
+					plant(Entities.Sunflower)
 				if y < world_size - 1:
 					move(North)
 		else:
@@ -508,28 +507,15 @@ def farm_sunflower():
 					till()
 				if get_entity_type() != Entities.Sunflower:
 					plant(Entities.Sunflower)
-				if can_harvest():
-					harvestable.append((measure() or 0, x, y))
+				elif can_harvest():
+					harvest()
+					if get_ground_type() != Grounds.Soil:
+						till()
+					plant(Entities.Sunflower)
 				if y > 0:
 					move(South)
 		if x < world_size - 1:
 			move(East)
-
-	# Harvest in descending petal order. Each harvest removes the current farm maximum
-	# and replants it as a fresh seedling (0 petals), so the next entry in the sorted
-	# list is always the new maximum — triggering the 8x power bonus every time.
-	harvestable = sorted(harvestable, reverse=True)
-	for petals, x, y in harvestable:
-		goto_sw()
-		for i in range(x):
-			move(East)
-		for i in range(y):
-			move(North)
-		if can_harvest():
-			harvest()
-			if get_ground_type() != Grounds.Soil:
-				till()
-			plant(Entities.Sunflower)
 
 # --- Main Execution ---
 
