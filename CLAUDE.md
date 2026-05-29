@@ -137,6 +137,8 @@ Sort swap condition (ascending, smallest at SW origin): `if measure() > measure(
 
 `goto_sw()` navigates to origin (x=0, y=0) by moving South then West. Avoid nested `while` loops inside `farm_cactus()` — the game environment does not handle them reliably.
 
+**No keyword arguments in function calls** — the game's Python parser rejects keyword arguments entirely. `sorted(list, reverse=True)` causes a parse error ("Expected comma or closing bracket") that prevents the whole script from starting. Use only positional arguments; replace any `sorted(..., reverse=True)` with a manual sort or a different approach. This applies to ALL function calls, not just `sorted()`.
+
 **Wood — trees require Soil** — before `plant(Entities.Tree)` always check `if get_ground_type() != Grounds.Soil: till()`. Planting on Grassland fails silently.
 
 **Pumpkin — second harvest sweep** — after the main grid traversal a second full sweep is needed to catch tiles that ripened while the drone worked other cells.
