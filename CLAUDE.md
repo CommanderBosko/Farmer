@@ -47,7 +47,7 @@ This is a farming automation bot for a game. The game injects its own API at run
 | `MIN_POWER_STOCK` | Replenish sunflowers when power drops below this; power doubles drone speed (default 500) |
 | `MIN_WEIRD_SUBSTANCE_STOCK` | Run a maze when `Items.Weird_Substance` reaches this level; lower = more frequent runs (default 500) |
 | `MIN_GOLD_STOCK` | When `> 0`, prioritize maze runs until this gold target is reached; set before manually buying gold-cost upgrades, reset to `0` when done (default 0) |
-| `USE_MULTIPLE_DRONES` | When `True`, spawn a second drone to farm the right half of the grid in parallel (Hay/Wood/Carrot/Pumpkin only); set to `False` to revert to single-drone (default `True`) |
+| `NUM_DRONES` | Number of parallel drones (1–32); capped to `world_size`; Cactus/Maze/Sunflower always run single-drone; requires Megafarm upgrade (default `32`) |
 
 ### Crop farming strategies (inside `farm()`)
 
@@ -139,11 +139,14 @@ Sort swap condition (ascending, smallest at SW origin): `if measure() > measure(
 
 **No keyword arguments in function calls** — the game's Python parser rejects keyword arguments entirely. `sorted(list, reverse=True)` causes a parse error ("Expected comma or closing bracket") that prevents the whole script from starting. Use only positional arguments; replace any `sorted(..., reverse=True)` with a manual sort or a different approach. This applies to ALL function calls, not just `sorted()`.
 
+**No ternary expressions** — `x = a if cond else b` causes a parse error ("A BRACKET_CLOSE is expected here") and silently prevents the script from starting. Use a plain `if`/`else` block instead.
+
 **Wood — trees require Soil** — before `plant(Entities.Tree)` always check `if get_ground_type() != Grounds.Soil: till()`. Planting on Grassland fails silently.
 
 **Pumpkin — second harvest sweep** — after the main grid traversal a second full sweep is needed to catch tiles that ripened while the drone worked other cells.
 
-**Mega Farm — multi-drone parallelism** — `farm_grid(crop_choice, start_x, end_x)` wraps the per-cell loop. When `config.USE_MULTIPLE_DRONES` is `True` and `world_size >= 2`, the main loop splits the grid at `mid = world_size // 2`: the spawned drone farms columns `[mid, world_size)` and the main drone farms `[0, mid)` concurrently. Key constraints:
+**Mega Farm — multi-drone parallelism** — `farm_grid(crop_choice, start_x, end_x)` wraps the per-cell loop. When `config.NUM_DRONES > 1`, the main loop distributes columns evenly across up to 32 drones: `base = world_size // num_drones` columns per drone, with the first `world_size % num_drones` drones getting one extra column. Spawned drones (0..N-2) handle the first N-1 slices; the main drone handles the final slice. Key constraints:
+- `num_drones` is capped at `world_size` — no 0-column slices
 - Each drone owns exclusive columns — no shared tiles, no race conditions
 - `farm_grid()` calls `update_amounts()` at entry to sync the spawned drone's stale globals copy
 - Cactus, Maze, and Sunflower remain single-drone: cactus has cross-column sort phases, maze is sequential wall-following, sunflower needs a full-grid max-petal scan

@@ -564,11 +564,22 @@ while True:
 		farm_sunflower()
 	else:
 		world_size = get_world_size()
-		if config.USE_MULTIPLE_DRONES and world_size >= 2:
-			mid = world_size // 2
-			drone = spawn_drone(farm_grid, crop_choice, mid, world_size)
-			farm_grid(crop_choice, 0, mid)
-			wait_for(drone)
+		num_drones = min(config.NUM_DRONES, world_size)
+		if num_drones > 1:
+			base = world_size // num_drones
+			remainder = world_size % num_drones
+			drones = []
+			cur = 0
+			for i in range(num_drones - 1):
+				if i < remainder:
+					width = base + 1
+				else:
+					width = base
+				drones.append(spawn_drone(farm_grid, crop_choice, cur, cur + width))
+				cur = cur + width
+			farm_grid(crop_choice, cur, world_size)
+			for d in drones:
+				wait_for(d)
 		else:
 			farm_grid(crop_choice, 0, world_size)
 

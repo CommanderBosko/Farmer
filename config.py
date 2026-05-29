@@ -33,6 +33,7 @@ MIN_WEIRD_SUBSTANCE_STOCK = 500
 # Simulation, Leaderboard), then reset to 0 when done.
 MIN_GOLD_STOCK = 0
 
-# Enable multi-drone farming (requires Mega Farm unlock purchased with Gold).
-# Set to False to fall back to single-drone if issues arise.
-USE_MULTIPLE_DRONES = True
+# Number of drones to use for parallel farming (1 = single-drone, max = 32 with Megafarm maxed).
+# Capped automatically to world_size — you can't farm more columns than exist.
+# Cactus, Maze, and Sunflower always run single-drone regardless of this setting.
+NUM_DRONES = 32
