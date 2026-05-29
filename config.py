@@ -13,7 +13,7 @@ PRINT_GOAL_INTERVAL = 1
 
 # The minimum amount of a prerequisite resource to have in stock before
 # planting the next tier of crop.
-MIN_PREREQ_STOCK = 100000
+MIN_PREREQ_STOCK = 200000
 
 # Minimum power to keep on hand. When power drops below this the bot will
 # switch to sunflower farming until it's replenished. Power doubles drone
