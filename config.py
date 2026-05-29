@@ -19,7 +19,7 @@ MIN_PREREQ_STOCK = 100000
 # switch to sunflower farming until it's replenished. Power doubles drone
 # speed (1 power consumed per 30 actions), so keeping it stocked is worth
 # the brief detour. Requires Unlocks.Sunflowers to be purchased first.
-MIN_POWER_STOCK = 50000
+MIN_POWER_STOCK = 5000
 
 # Weird_Substance threshold for triggering maze farming. The bot will run a
 # maze (clearing the current farm) only when this much WS is stockpiled.
