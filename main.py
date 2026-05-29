@@ -74,7 +74,7 @@ UNLOCK_NAMES = {
 # New: Prerequisite mapping for stock checks
 PREREQUISITES = {
 	Items.Wood: (Items.Hay, config.MIN_PREREQ_STOCK),
-	Items.Carrot: (Items.Hay, config.MIN_PREREQ_STOCK),
+	Items.Carrot: (Items.Wood, config.MIN_PREREQ_STOCK),
 	Items.Pumpkin: (Items.Carrot, config.MIN_PREREQ_STOCK),
 	Items.Cactus: (Items.Pumpkin, config.MIN_PREREQ_STOCK),
 	Items.Weird_Substance: (Items.Cactus, config.MIN_PREREQ_STOCK),
