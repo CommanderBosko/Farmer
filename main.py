@@ -23,7 +23,6 @@ water = 0
 power = 0
 gold = 0
 loop_counter = 0 # New: Global counter for loop iterations
-cactus_phase = 0
 
 # Map Items enum to readable names for printing
 ITEM_NAMES = {
@@ -361,14 +360,13 @@ def farm_grid(crop_choice, start_x, end_x):
 		if x < end_x - 1:
 			move(East)
 
-def farm_cactus():
-	global cactus_phase
+def plant_cactus_strip(start_x, end_x):
 	world_size = get_world_size()
-
-	if cactus_phase == 0:
-		# Plant: ensure every cell has a cactus on soil
-		goto_sw()
-		for x in range(world_size):
+	goto_sw()
+	for _ in range(start_x):
+		move(East)
+	for x in range(start_x, end_x):
+		if (x - start_x) % 2 == 0:
 			for y in range(world_size):
 				if can_harvest():
 					harvest()
@@ -378,72 +376,148 @@ def farm_cactus():
 					plant(Entities.Cactus)
 				if y < world_size - 1:
 					move(North)
-			if x < world_size - 1:
-				move(East)
-		goto_sw()
-		cactus_phase = 1
-
-	elif cactus_phase == 1:
-		# Wait: check every cell — only advance when ALL are harvestable
-		goto_sw()
-		all_ready = True
-		for x in range(world_size):
-			for y in range(world_size):
-				if not can_harvest():
-					all_ready = False
-				if y < world_size - 1:
-					move(North)
-			if x < world_size - 1:
-				move(East)
-		goto_sw()
-		if all_ready:
-			cactus_phase = 2
-
-	elif cactus_phase == 2:
-		# Sort rows: bubble sort each row West→East
-		goto_sw()
-		for row in range(world_size):
-			for _ in range(world_size - 1):
-				swapped = False
-				for col in range(world_size - 1):
-					if measure() > measure(East):
-						swap(East)
-						swapped = True
-					move(East)
-				for col in range(world_size - 1):
-					move(West)
-				if not swapped:
-					break
-			if row < world_size - 1:
-				move(North)
-		goto_sw()
-		cactus_phase = 3
-
-	elif cactus_phase == 3:
-		# Sort columns: bubble sort each column South→North
-		goto_sw()
-		for col in range(world_size):
-			for _ in range(world_size - 1):
-				swapped = False
-				for row in range(world_size - 1):
-					if measure() > measure(North):
-						swap(North)
-						swapped = True
-					move(North)
-				for row in range(world_size - 1):
+		else:
+			for y in range(world_size - 1, -1, -1):
+				if can_harvest():
+					harvest()
+				if get_ground_type() != Grounds.Soil:
+					till()
+				if get_entity_type() != Entities.Cactus:
+					plant(Entities.Cactus)
+				if y > 0:
 					move(South)
-				if not swapped:
-					break
-			if col < world_size - 1:
-				move(East)
-		goto_sw()
-		cactus_phase = 4
+		if x < end_x - 1:
+			move(East)
 
-	elif cactus_phase == 4:
-		# Harvest from SW corner — cascades to full grid if all grown and sorted
+def wait_cactus_strip(start_x, end_x):
+	world_size = get_world_size()
+	all_ready = False
+	while not all_ready:
+		all_ready = True
 		goto_sw()
-		harvest()
-		cactus_phase = 0  # reset: field is now empty, replant next iteration
+		for _ in range(start_x):
+			move(East)
+		for x in range(start_x, end_x):
+			if (x - start_x) % 2 == 0:
+				for y in range(world_size):
+					if not can_harvest():
+						all_ready = False
+					if y < world_size - 1:
+						move(North)
+			else:
+				for y in range(world_size - 1, -1, -1):
+					if not can_harvest():
+						all_ready = False
+					if y > 0:
+						move(South)
+			if x < end_x - 1:
+				move(East)
+
+def sort_cactus_rows(start_row, end_row):
+	world_size = get_world_size()
+	goto_sw()
+	for _ in range(start_row):
+		move(North)
+	for row in range(start_row, end_row):
+		for _ in range(world_size - 1):
+			swapped = False
+			for col in range(world_size - 1):
+				if measure() > measure(East):
+					swap(East)
+					swapped = True
+				move(East)
+			for col in range(world_size - 1):
+				move(West)
+			if not swapped:
+				break
+		if row < end_row - 1:
+			move(North)
+
+def sort_cactus_cols(start_col, end_col):
+	world_size = get_world_size()
+	goto_sw()
+	for _ in range(start_col):
+		move(East)
+	for col in range(start_col, end_col):
+		for _ in range(world_size - 1):
+			swapped = False
+			for row in range(world_size - 1):
+				if measure() > measure(North):
+					swap(North)
+					swapped = True
+				move(North)
+			for row in range(world_size - 1):
+				move(South)
+			if not swapped:
+				break
+		if col < end_col - 1:
+			move(East)
+
+def farm_cactus():
+	world_size = get_world_size()
+	num_drones = min(config.NUM_DRONES, world_size)
+	base = world_size // num_drones
+	remainder = world_size % num_drones
+
+	# Plant
+	drones = []
+	cur = 0
+	for i in range(num_drones - 1):
+		if i < remainder:
+			width = base + 1
+		else:
+			width = base
+		drones.append(spawn_drone(plant_cactus_strip, cur, cur + width))
+		cur = cur + width
+	plant_cactus_strip(cur, world_size)
+	for d in drones:
+		wait_for(d)
+
+	# Wait until all harvestable
+	drones = []
+	cur = 0
+	for i in range(num_drones - 1):
+		if i < remainder:
+			width = base + 1
+		else:
+			width = base
+		drones.append(spawn_drone(wait_cactus_strip, cur, cur + width))
+		cur = cur + width
+	wait_cactus_strip(cur, world_size)
+	for d in drones:
+		wait_for(d)
+
+	# Sort rows
+	drones = []
+	cur = 0
+	for i in range(num_drones - 1):
+		if i < remainder:
+			width = base + 1
+		else:
+			width = base
+		drones.append(spawn_drone(sort_cactus_rows, cur, cur + width))
+		cur = cur + width
+	sort_cactus_rows(cur, world_size)
+	for d in drones:
+		wait_for(d)
+
+	# Sort columns
+	drones = []
+	cur = 0
+	for i in range(num_drones - 1):
+		if i < remainder:
+			width = base + 1
+		else:
+			width = base
+		drones.append(spawn_drone(sort_cactus_cols, cur, cur + width))
+		cur = cur + width
+	sort_cactus_cols(cur, world_size)
+	for d in drones:
+		wait_for(d)
+
+	# Harvest cascade from SW corner
+	goto_sw()
+	harvest()
 
 def farm_maze():
 	# Determine how much Weird_Substance to use for this maze
