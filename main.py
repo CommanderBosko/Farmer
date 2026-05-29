@@ -73,11 +73,11 @@ UNLOCK_NAMES = {
 
 # New: Prerequisite mapping for stock checks
 PREREQUISITES = {
-	Items.Wood: (Items.Hay, config.MIN_PREREQ_STOCK),
-	Items.Carrot: (Items.Wood, config.MIN_PREREQ_STOCK),
-	Items.Pumpkin: (Items.Carrot, config.MIN_PREREQ_STOCK),
-	Items.Cactus: (Items.Pumpkin, config.MIN_PREREQ_STOCK),
-	Items.Weird_Substance: (Items.Cactus, config.MIN_PREREQ_STOCK),
+	Items.Wood: [(Items.Hay, config.MIN_PREREQ_STOCK)],
+	Items.Carrot: [(Items.Hay, config.MIN_PREREQ_STOCK), (Items.Wood, config.MIN_PREREQ_STOCK)],
+	Items.Pumpkin: [(Items.Carrot, config.MIN_PREREQ_STOCK)],
+	Items.Cactus: [(Items.Pumpkin, config.MIN_PREREQ_STOCK)],
+	Items.Weird_Substance: [(Items.Cactus, config.MIN_PREREQ_STOCK)],
 }
 
 
@@ -162,12 +162,15 @@ def get_next_unlock_goal():
 def plant_decision():
 	# Helper to check prerequisite stock
 	def check_stock(crop_to_plant):
-		while crop_to_plant in PREREQUISITES:
-			prereq_item, required_amount = PREREQUISITES[crop_to_plant]
-			if get_amount(prereq_item) < required_amount:
-				crop_to_plant = prereq_item
-			else:
-				break
+		progress = True
+		while progress:
+			progress = False
+			if crop_to_plant in PREREQUISITES:
+				for prereq_item, required_amount in PREREQUISITES[crop_to_plant]:
+					if get_amount(prereq_item) < required_amount:
+						crop_to_plant = prereq_item
+						progress = True
+						break
 		return crop_to_plant
 
 	if config.FOCUS_CROP and config.FOCUS_CROP in FOCUS_CROP_MAP:
