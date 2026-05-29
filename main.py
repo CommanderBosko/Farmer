@@ -325,6 +325,8 @@ def farm(crop_choice, x, y):
 			if pumpkin_iter >= 100:
 				break
 			pumpkin_iter += 1
+			harvest()
+			plant(Entities.Pumpkin)
 			if get_amount(Items.Fertilizer) > 0:
 				use_item(Items.Fertilizer)
 			else:
