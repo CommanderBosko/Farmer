@@ -482,53 +482,49 @@ def farm_maze():
 def farm_sunflower():
 	world_size = get_world_size()
 
-	# Pass 1: plant any missing sunflowers; find the max-petal position
+	# Pass 1: plant missing sunflowers; collect harvestable cells with petal counts.
+	# Snake traversal ensures the drone is at the correct physical cell for each call.
 	goto_sw()
-	max_petals = 0
-	max_x = 0
-	max_y = 0
+	harvestable = []
 	for x in range(world_size):
-		for y in range(world_size):
-			if get_ground_type() != Grounds.Soil:
-				till()
-			if get_entity_type() != Entities.Sunflower:
-				plant(Entities.Sunflower)
-			petals = measure()
-			if petals > max_petals:
-				max_petals = petals
-				max_x = x
-				max_y = y
-			if y < world_size - 1:
-				move(North)
-		if x < world_size - 1:
-			move(East)
-
-	# Harvest the max-petal sunflower first — triggers 8x power bonus when
-	# at least 10 sunflowers are on the farm (world_size >= 4 gives 16 cells)
-	goto_sw()
-	for i in range(max_x):
-		move(East)
-	for i in range(max_y):
-		move(North)
-	if can_harvest():
-		harvest()
-		if get_ground_type() != Grounds.Soil:
-			till()
-		plant(Entities.Sunflower)
-
-	# Pass 2: harvest all remaining ready sunflowers and replant
-	goto_sw()
-	for x in range(world_size):
-		for y in range(world_size):
-			if can_harvest():
-				harvest()
+		if x % 2 == 0:
+			for y in range(world_size):
 				if get_ground_type() != Grounds.Soil:
 					till()
-				plant(Entities.Sunflower)
-			if y < world_size - 1:
-				move(North)
+				if get_entity_type() != Entities.Sunflower:
+					plant(Entities.Sunflower)
+				if can_harvest():
+					harvestable.append((measure() or 0, x, y))
+				if y < world_size - 1:
+					move(North)
+		else:
+			for y in range(world_size - 1, -1, -1):
+				if get_ground_type() != Grounds.Soil:
+					till()
+				if get_entity_type() != Entities.Sunflower:
+					plant(Entities.Sunflower)
+				if can_harvest():
+					harvestable.append((measure() or 0, x, y))
+				if y > 0:
+					move(South)
 		if x < world_size - 1:
 			move(East)
+
+	# Harvest in descending petal order. Each harvest removes the current farm maximum
+	# and replants it as a fresh seedling (0 petals), so the next entry in the sorted
+	# list is always the new maximum — triggering the 8x power bonus every time.
+	harvestable = sorted(harvestable, reverse=True)
+	for petals, x, y in harvestable:
+		goto_sw()
+		for i in range(x):
+			move(East)
+		for i in range(y):
+			move(North)
+		if can_harvest():
+			harvest()
+			if get_ground_type() != Grounds.Soil:
+				till()
+			plant(Entities.Sunflower)
 
 # --- Main Execution ---
 
