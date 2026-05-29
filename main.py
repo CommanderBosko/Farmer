@@ -76,6 +76,7 @@ PREREQUISITES = {
 	Items.Wood: (Items.Hay, config.MIN_PREREQ_STOCK),
 	Items.Carrot: (Items.Hay, config.MIN_PREREQ_STOCK),
 	Items.Pumpkin: (Items.Carrot, config.MIN_PREREQ_STOCK),
+	Items.Cactus: (Items.Pumpkin, config.MIN_PREREQ_STOCK),
 	Items.Weird_Substance: (Items.Cactus, config.MIN_PREREQ_STOCK),
 }
 
@@ -161,11 +162,13 @@ def get_next_unlock_goal():
 def plant_decision():
 	# Helper to check prerequisite stock
 	def check_stock(crop_to_plant):
-		if crop_to_plant in PREREQUISITES:
+		while crop_to_plant in PREREQUISITES:
 			prereq_item, required_amount = PREREQUISITES[crop_to_plant]
 			if get_amount(prereq_item) < required_amount:
-				return prereq_item # Not enough stock, return the prerequisite to plant instead
-		return crop_to_plant # Stock is fine, proceed with the original plan
+				crop_to_plant = prereq_item
+			else:
+				break
+		return crop_to_plant
 
 	if config.FOCUS_CROP and config.FOCUS_CROP in FOCUS_CROP_MAP:
 		return FOCUS_CROP_MAP[config.FOCUS_CROP] # Focus mode bypasses stock checks
@@ -205,7 +208,7 @@ def plant_decision():
 	if _pumpkin <= _hay and _pumpkin <= _wood and _pumpkin <= _carrot and _pumpkin <= _cactus:
 		result = check_stock(Items.Pumpkin)
 	if _cactus <= _hay and _cactus <= _wood and _cactus <= _carrot and _cactus <= _pumpkin:
-		result = Items.Cactus
+		result = check_stock(Items.Cactus)
 	return result
 
 def auto_unlocks():
@@ -281,7 +284,10 @@ def farm(crop_choice, x, y):
 	elif crop_choice == Items.Wood:
 		harvest()
 		if (x % 2 == 0 and y % 2 == 0) or (x % 2 == 1 and y % 2 == 1):
-			plant(Entities.Tree)
+			if get_ground_type() != Grounds.Soil:
+				till()
+			if get_entity_type() != Entities.Tree:
+				plant(Entities.Tree)
 		else:
 			if get_amount(Items.Hay) <= get_amount(Items.Carrot):
 				if get_ground_type() != Grounds.Grassland:
@@ -289,37 +295,36 @@ def farm(crop_choice, x, y):
 			else:
 				if get_ground_type() != Grounds.Soil:
 					till()
-				plant(Entities.Carrot)
+				if get_entity_type() != Entities.Carrot:
+					plant(Entities.Carrot)
 
 	elif crop_choice == Items.Carrot:
-		harvest()
+		if can_harvest():
+			harvest()
 		if get_ground_type() != Grounds.Soil:
 			till()
-		plant(Entities.Carrot)
+		if get_entity_type() != Entities.Carrot:
+			plant(Entities.Carrot)
 
 	elif crop_choice == Items.Pumpkin:
 		if can_harvest():
 			harvest()
 		if get_ground_type() != Grounds.Soil:
 			till()
-		while get_water() < 1:
-			use_item(Items.Water)
-		plant(Entities.Pumpkin)
-		
-		# Use fertilizer if available, otherwise flip
+		if get_entity_type() != Entities.Pumpkin:
+			while get_water() < 1:
+				use_item(Items.Water)
+			plant(Entities.Pumpkin)
 		if get_amount(Items.Fertilizer) > 0:
 			use_item(Items.Fertilizer)
 		else:
 			do_a_flip()
-		
+
 		pumpkin_iter = 0
 		while not can_harvest():
 			if pumpkin_iter >= 100:
 				break
 			pumpkin_iter += 1
-			harvest()
-			plant(Entities.Pumpkin)
-			# Use fertilizer if available, otherwise flip
 			if get_amount(Items.Fertilizer) > 0:
 				use_item(Items.Fertilizer)
 			else:
