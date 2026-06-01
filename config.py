@@ -13,7 +13,7 @@ PRINT_GOAL_INTERVAL = 1
 
 # The minimum amount of a prerequisite resource to have in stock before
 # planting the next tier of crop.
-MIN_PREREQ_STOCK = 200000
+MIN_PREREQ_STOCK = 500000
 
 # Minimum power to keep on hand. When power drops below this the bot will
 # switch to sunflower farming until it's replenished. Power doubles drone
@@ -35,5 +35,5 @@ MIN_GOLD_STOCK = 0
 
 # Number of drones to use for parallel farming (1 = single-drone, max = 32 with Megafarm maxed).
 # Capped automatically to world_size — you can't farm more columns than exist.
-# Cactus, Maze, and Sunflower always run single-drone regardless of this setting.
+# Maze always runs single-drone regardless of this setting.
 NUM_DRONES = 32

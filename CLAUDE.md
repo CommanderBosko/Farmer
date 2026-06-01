@@ -149,5 +149,5 @@ Sort swap condition (ascending, smallest at SW origin): `if measure() > measure(
 - `num_drones` is capped at `world_size` — no 0-column slices
 - Each drone owns exclusive columns — no shared tiles, no race conditions
 - `farm_grid()` calls `update_amounts()` at entry to sync the spawned drone's stale globals copy
-- Cactus, Maze, and Sunflower remain single-drone: cactus has cross-column sort phases, maze is sequential wall-following, sunflower needs a full-grid max-petal scan
+- Maze always runs single-drone (sequential wall-following); Cactus and Sunflower both parallelize across drones via strip functions
 - `spawn_drone()`, `wait_for()`, `has_finished()` are game-injected APIs (not defined in repo)

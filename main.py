@@ -563,11 +563,13 @@ def farm_maze():
 	# Reset farm to a clean farmable state regardless of outcome
 	clear()
 
-def farm_sunflower():
+def farm_sunflower_strip(start_x, end_x):
 	world_size = get_world_size()
 	goto_sw()
-	for x in range(world_size):
-		if x % 2 == 0:
+	for _ in range(start_x):
+		move(East)
+	for x in range(start_x, end_x):
+		if (x - start_x) % 2 == 0:
 			for y in range(world_size):
 				if get_ground_type() != Grounds.Soil:
 					till()
@@ -593,8 +595,26 @@ def farm_sunflower():
 					plant(Entities.Sunflower)
 				if y > 0:
 					move(South)
-		if x < world_size - 1:
+		if x < end_x - 1:
 			move(East)
+
+def farm_sunflower():
+	world_size = get_world_size()
+	num_drones = min(config.NUM_DRONES, world_size)
+	base = world_size // num_drones
+	remainder = world_size % num_drones
+	drones = []
+	cur = 0
+	for i in range(num_drones - 1):
+		if i < remainder:
+			width = base + 1
+		else:
+			width = base
+		drones.append(spawn_drone(farm_sunflower_strip, cur, cur + width))
+		cur = cur + width
+	farm_sunflower_strip(cur, world_size)
+	for d in drones:
+		wait_for(d)
 
 # --- Main Execution ---
 
